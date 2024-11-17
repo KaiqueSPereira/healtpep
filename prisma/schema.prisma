@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usario {
+  id          String       @id @default(uuid())
+  email       String       @unique
+  name        String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  contaId      String
+  consultas   Consultas[] // Relacionamento com Consultas
+  endereco    Endereco[] // Relacionamento com Endereco
+  tratamentos Tratamento[] // Relacionamento com Tratamento
+}
+
+model Consultas {
+  id              String          @id @default(uuid())
+  data            DateTime
+  endereco        String
+  profissional    String          @map("profissionalId")
+  queixas         String
+  tratamento      String
+  tipodeexame     String
+  tipo            Consultatype
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  userId          String
+  usuario         Usario          @relation(fields: [userId], references: [id]) // Atualiza�?o aqui
+  profissionalRef Profissional    @relation(fields: [profissional], references: [id])
+  unidadeId       String?
+  unidade         UnidadeDeSaude? @relation(fields: [unidadeId], references: [id])
+}
+
+enum Consultatype {
+  Rotina
+  Exame
+  Emergencia
+}
+
+model Endereco {
+  id        String   @id @default(uuid())
+  CEP       String
+  numero    Int
+  rua       String
+  bairro    String
+  municipio String
+  UF        String
+  nome      String
+  userId    String
+  usuario   Usario   @relation(fields: [userId], references: [id]) 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Profissional {
+  id            String          @id @default(uuid())
+  nome          String
+  especialidade String
+  crm           String          @unique
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  consultas     Consultas[] // Relacionamento com Consultas
+  unidadeId     String?
+  unidade       UnidadeDeSaude? @relation(fields: [unidadeId], references: [id])
+}
+
+model Tratamento {
+  id           String   @id @default(uuid())
+  nome         String
+  profissional String
+  userId       String
+  usuario      Usario   @relation(fields: [userId], references: [id]) // Atualiza�?o aqui
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model UnidadeDeSaude {
+  id            String         @id @default(uuid())
+  nome          String
+  endereco      String
+  tipo          String // Exemplo: Hospital, Cl�nica, Posto de Sa�de
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  consultas     Consultas[] // Relacionamento com Consultas
+  profissionais Profissional[] // Relacionamento com Profissionais
+}
